@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — pre-token protocols, ranked by implied value</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="dot"></span>TOKEN RADAR</div>
+  <div class="top-sub">Pre-token protocols, ranked by what their launch would be worth — and how to farm each one.</div>
+  <div class="meta" id="meta">Loading snapshot…</div>
+</header>
+
+<main id="app">
+  <section id="board-view">
+    <div class="stats" id="stats"></div>
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="Search a protocol…" aria-label="Search protocols">
+      <select id="category" aria-label="Filter by category"><option value="">All categories</option></select>
+      <select id="chain" aria-label="Filter by chain"><option value="">All chains</option></select>
+      <select id="sort" aria-label="Sort board">
+        <option value="implied">Sort: implied value</option>
+        <option value="tvl">Sort: TVL</option>
+        <option value="growth">Sort: 7-day growth</option>
+        <option value="age">Sort: age</option>
+      </select>
+      <label class="check"><input type="checkbox" id="watchlist-only"> Watchlist only</label>
+    </div>
+    <p class="count" id="count"></p>
+    <table class="board">
+      <thead><tr>
+        <th>#</th><th>Protocol</th><th>Category</th><th>Chains</th>
+        <th class="num">TVL</th><th class="num">7d</th><th class="num">Age</th><th class="num">Implied value</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <section class="panel" id="live-panel">
+      <h2>Already trading — the market's own values</h2>
+      <p class="note">These protocols record a token that already trades, so the board shows their market cap, not a model. They are kept apart from the ranked board above.</p>
+      <table class="board live">
+        <thead><tr><th>Protocol</th><th>Category</th><th class="num">TVL</th><th class="num">Market cap</th><th class="num">MCap / TVL</th></tr></thead>
+        <tbody id="live-rows"></tbody>
+      </table>
+    </section>
+
+    <section class="panel" id="sandbox-panel">
+      <h2>Model sandbox — change the model, watch the board move</h2>
+      <p class="note">The board above re-ranks live as you move the sliders. The submitted board.json is scored with the published constants; this sandbox only shows how the model behaves.</p>
+      <div class="sliders">
+        <label>Growth weight <output id="o-gw">0.60</output><input type="range" id="s-gw" min="0" max="1" step="0.05" value="0.6"></label>
+        <label>Maturity range <output id="o-mr">0.50</output><input type="range" id="s-mr" min="0" max="0.8" step="0.05" value="0.5"></label>
+        <label>Multiple scale <output id="o-ms">1.00</output><input type="range" id="s-ms" min="0.5" max="1.5" step="0.05" value="1"></label>
+        <button id="sandbox-reset" type="button">Reset</button>
+      </div>
+    </section>
+
+    <section class="panel" id="model-panel">
+      <h2>How the implied value is worked out</h2>
+      <p>implied = TVL × <b>category multiple</b> × <b>growth</b> × <b>maturity</b> × <b>breadth</b></p>
+      <ul class="model-list">
+        <li><b>Category multiple</b> — the median market-cap-to-TVL ratio of the live protocols in the same category, read off this snapshot. A DEX dollar and a lending dollar do not price the same, and the snapshot's own live protocols say by how much. Categories with fewer than three live samples fall back to the snapshot-wide median.</li>
+        <li><b>Growth</b> — 1 + clamp(7-day TVL change, −60%, +120%) × 0.6. Momentum counts, but a single week cannot triple a value.</li>
+        <li><b>Maturity</b> — 0.7 + min(age, 3 years) / 3 years × 0.5. A protocol tracked for years with no token is further along the road to one.</li>
+        <li><b>Breadth</b> — 1 + 0.02 per chain, up to 10 chains. A protocol live on many chains has more surface to launch from.</li>
+      </ul>
+      <p class="note">The implied value is this entry's own claim, never make.fun's: it says what a token would be worth if the protocol's record stayed as it is. It does not predict whether or when a token is issued. A protocol is shown as <i>recording no token</i>, never as having none: its DefiLlama record may simply not carry one.</p>
+      <h3>Calibration — where every multiple came from</h3>
+      <table class="board calib">
+        <thead><tr><th>Category</th><th class="num">Multiple</th><th class="num">Live samples</th><th class="num">Median ratio</th></tr></thead>
+        <tbody id="calib-rows"></tbody>
+      </table>
+    </section>
+  </section>
+
+  <section id="detail-view" hidden>
+    <p><a href="#/" id="back">← Back to the board</a></p>
+    <div id="detail"></div>
+  </section>
+</main>
+
+<footer>
+  <p>Token Radar · model radar-2 · Data: DefiLlama protocols snapshot, <span id="asof"></span>. The snapshot is frozen; re-running the program on it reproduces this board exactly. No network is used by this page.</p>
+</footer>
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
